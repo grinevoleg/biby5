@@ -73,9 +73,30 @@ python -m bot.main
 python scripts/show_stats.py
 ```
 
-Бот пишет лог в `logs/bot.log`, сделки — в SQLite `journal.db`.
+Бот пишет лог в `logs/bot.log`, сделки — в SQLite `state/journal.db`.
 Остановка Ctrl+C: невыполненные входные ордера снимаются; открытая позиция
 остаётся под защитой биржевого стопа и подхватывается при рестарте.
+
+## Запуск 24/7 на VPS (Docker)
+
+Боту нужен постоянно работающий хост — подойдёт любой дешёвый VPS
+(Ubuntu/Debian, хватит минимальной конфигурации за ~$5/мес):
+
+```bash
+# на свежем VPS
+curl -fsSL https://get.docker.com | sh
+git clone https://github.com/grinevoleg/biby5.git && cd biby5
+cp .env.example .env && nano .env     # вписать API-ключи
+
+docker compose up -d --build          # запуск
+docker compose logs -f                # смотреть лог (Ctrl+C — выйти, бот работает)
+docker compose down                   # остановка
+```
+
+`restart: unless-stopped` поднимает бота после падений и перезагрузки
+сервера. Журнал сделок (`state/journal.db`) и логи (`logs/`) лежат на
+хосте и переживают пересборку контейнера. Статистика:
+`docker compose exec bot python scripts/show_stats.py`.
 
 ## Структура
 

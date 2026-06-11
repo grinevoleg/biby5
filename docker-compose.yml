@@ -1,0 +1,15 @@
+services:
+  bot:
+    build: .
+    container_name: biby5-bot
+    restart: unless-stopped     # переживает падения и перезагрузку VPS
+    env_file: .env
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./logs:/app/logs        # logs/bot.log
+      - ./state:/app/state      # state/journal.db — журнал сделок
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

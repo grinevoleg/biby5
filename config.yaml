@@ -51,5 +51,5 @@ fees:
   maker: 0.0002
   taker: 0.00055
 
-journal_db: journal.db
+journal_db: state/journal.db
 log_file: logs/bot.log

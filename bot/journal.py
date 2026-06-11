@@ -1,10 +1,14 @@
 """Журнал сделок в SQLite и расчёт статистики."""
+import os
 import sqlite3
 from datetime import datetime, timezone
 
 
 class Journal:
     def __init__(self, path: str = "journal.db"):
+        parent = os.path.dirname(path)
+        if parent:
+            os.makedirs(parent, exist_ok=True)
         self.conn = sqlite3.connect(path)
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS trades (
