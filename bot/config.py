@@ -38,6 +38,7 @@ class ExecutionParams:
     poll_interval_sec: float = 5.0
     entry_timeout_sec: float = 120.0
     order_qty_min_notional: float = 5.0
+    heartbeat_sec: float = 300.0
 
 
 @dataclass

@@ -59,12 +59,20 @@ def main():
 
     log.info("Статистика журнала:\n%s", format_stats(journal.stats()))
 
+    log.info("Бот работает. Сигналы возникают редко (обычно несколько в день); "
+             "строка состояния — каждые %.0f с.", cfg.execution.heartbeat_sec)
+
+    last_beat = 0.0
     try:
         while True:
             open_total = sum(1 for t in traders if t.in_market)
             for t in traders:
                 t.step(open_total)
                 open_total = sum(1 for t2 in traders if t2.in_market)
+            if time.time() - last_beat >= cfg.execution.heartbeat_sec:
+                for t in traders:
+                    log.info(t.status_line())
+                last_beat = time.time()
             time.sleep(cfg.execution.poll_interval_sec)
     except KeyboardInterrupt:
         log.info("Останов по Ctrl+C")

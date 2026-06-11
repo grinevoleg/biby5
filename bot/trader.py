@@ -36,6 +36,7 @@ class SymbolTrader:
         self.journal = journal
 
         self.state = IDLE
+        self.last_snapshot = None      # индикаторы для статусных логов
         self.last_eval_ts = 0          # ts последней оценённой закрытой свечи
         self.entry_order_id = None
         self.entry_deadline = 0.0
@@ -84,6 +85,7 @@ class SymbolTrader:
         if closed[-1].ts <= self.last_eval_ts:
             return
         self.last_eval_ts = closed[-1].ts
+        self.last_snapshot = self.strategy.snapshot(closed)
 
         signal = self.strategy.evaluate(closed)
         if signal is None:
@@ -218,6 +220,20 @@ class SymbolTrader:
         self.signal = None
         self.tp_order_id = None
         self.opened_at = None
+
+    def status_line(self) -> str:
+        if self.state == ENTRY_PENDING and self.signal:
+            return (f"{self.symbol}: жду исполнения входа {self.signal.side} "
+                    f"@ {self.signal.entry:.6g}")
+        if self.state == IN_POSITION:
+            left = max(0, int(self.position_deadline - time.time()))
+            return (f"{self.symbol}: в позиции, до тайм-стопа "
+                    f"{left // 60} мин")
+        s = self.last_snapshot
+        if not s:
+            return f"{self.symbol}: жду сигнала (данные ещё накапливаются)"
+        return (f"{self.symbol}: жду сигнала | цена {s['close']:.6g} | "
+                f"RSI {s['rsi']:.1f} | BB [{s['lower']:.6g} … {s['upper']:.6g}]")
 
     def shutdown(self):
         """Остановка бота: снимаем невыполненный вход. Открытую позицию

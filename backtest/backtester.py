@@ -73,11 +73,14 @@ def run_backtest(symbol: str, candles: List[Candle],
     res = BtResult(symbol=symbol, start_equity=start_equity)
     equity = start_equity
     warmup = strategy.min_bars()
+    # окно как у живого бота (он запрашивает min_bars+50 свечей) —
+    # и индикаторы совпадают с боевыми, и бэктест на порядок быстрее
+    window = warmup + 50
     i = warmup
     n = len(candles)
 
     while i < n - 1:
-        sig = strategy.evaluate(candles[:i + 1])
+        sig = strategy.evaluate(candles[max(0, i + 1 - window):i + 1])
         if sig is None:
             i += 1
             continue

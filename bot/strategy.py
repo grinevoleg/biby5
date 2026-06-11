@@ -45,6 +45,20 @@ class MeanReversionStrategy:
         return max(p.bb_period, p.rsi_period + 1, p.atr_period + 1,
                    p.trend_ema_period if p.trend_filter else 0) + 5
 
+    def snapshot(self, candles: List[Candle]) -> Optional[dict]:
+        """Текущие значения индикаторов для статусных логов."""
+        p = self.p
+        if len(candles) < self.min_bars():
+            return None
+        closes = [c.close for c in candles]
+        bb = bollinger(closes, p.bb_period, p.bb_std)
+        r = rsi(closes, p.rsi_period)
+        if bb is None or r is None:
+            return None
+        mid, upper, lower = bb
+        return {"close": closes[-1], "rsi": r,
+                "mid": mid, "upper": upper, "lower": lower}
+
     def evaluate(self, candles: List[Candle]) -> Optional[Signal]:
         """candles — только закрытые свечи, последняя в конце."""
         p = self.p

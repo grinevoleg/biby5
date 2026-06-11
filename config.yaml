@@ -42,6 +42,7 @@ execution:
   poll_interval_sec: 5
   entry_timeout_sec: 120      # не исполнился лимитник за это время — отменяем, не гонимся за ценой
   order_qty_min_notional: 5.0 # минимальный номинал ордера на Bybit linear
+  heartbeat_sec: 300          # каждые N секунд печатать строку состояния по инструментам
 
 fees:
   maker: 0.0002
