@@ -15,6 +15,7 @@ class StrategyParams:
     rsi_overbought: float = 70.0
     atr_period: int = 14
     sl_atr_mult: float = 1.5
+    entry_offset_atr: float = 0.0
     trend_ema_period: int = 200
     trend_filter: bool = True
     min_profit_pct: float = 0.25

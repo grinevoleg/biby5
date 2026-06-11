@@ -26,6 +26,7 @@ GRID = {
     "bb_std": [2.0, 2.5, 3.0],
     "rsi_oversold": [20.0, 25.0, 30.0],   # rsi_overbought = 100 - oversold
     "sl_atr_mult": [1.5, 2.5, 3.5],
+    "entry_offset_atr": [0.0, 0.5, 1.0],
     "time_stop_bars": [12, 24, 48],
     "trend_filter": [True, False],
 }
@@ -117,36 +118,46 @@ def main():
 
     print(f"\nТоп-{args.top} по обучающему периоду "
           f"(решает ПРОВЕРОЧНЫЙ — правая колонка):")
-    header = (f"{'bb':>4} {'rsi':>4} {'sl':>4} {'tstop':>5} {'trend':>5} | "
-              f"{'обучение':^34} | {'проверка':^34}")
+    header = (f"{'bb':>4} {'rsi':>4} {'sl':>4} {'off':>4} {'tstop':>5} "
+              f"{'trend':>5} | {'обучение':^34} | {'проверка':^34}")
     print(header)
     print("-" * len(header))
     for r in results[:args.top]:
         c = r["combo"]
         print(f"{c['bb_std']:4.1f} {c['rsi_oversold']:4.0f} "
-              f"{c['sl_atr_mult']:4.1f} {c['time_stop_bars']:5d} "
-              f"{str(c['trend_filter'])[:5]:>5} | {fmt(r['train'])} | "
-              f"{fmt(r['test'])}")
+              f"{c['sl_atr_mult']:4.1f} {c['entry_offset_atr']:4.1f} "
+              f"{c['time_stop_bars']:5d} {str(c['trend_filter'])[:5]:>5} | "
+              f"{fmt(r['train'])} | {fmt(r['test'])}")
 
-    good = [r for r in results[:args.top]
-            if r["test"].get("trades", 0) >= 10
-            and r["test"].get("net_pnl", 0) > 0]
+    # В торговлю кандидат берётся только если он прибылен И на обучении,
+    # И на проверке — плюс лишь в одном из периодов означает случайность.
+    good = [r for r in results
+            if r["train"].get("profit_factor", 0) >= 1.05
+            and r["train"].get("trades", 0) >= 30
+            and r["test"].get("trades", 0) >= 10
+            and r["test"].get("net_pnl", 0) > 0
+            and r["test"].get("profit_factor", 0) >= 1.05]
     if good:
+        good.sort(key=lambda r: min(r["train"]["profit_factor"],
+                                    r["test"]["profit_factor"]),
+                  reverse=True)
         c = good[0]["combo"]
-        print("\nЛучшая комбинация, подтверждённая проверочным периодом, "
-              "для config.yaml:")
+        print("\nКомбинация, прибыльная в ОБОИХ периодах, для config.yaml:")
         print(f"  bb_std: {c['bb_std']}\n"
               f"  rsi_oversold: {c['rsi_oversold']}\n"
               f"  rsi_overbought: {100 - c['rsi_oversold']}\n"
               f"  sl_atr_mult: {c['sl_atr_mult']}\n"
+              f"  entry_offset_atr: {c['entry_offset_atr']}\n"
               f"  time_stop_bars: {c['time_stop_bars']}\n"
               f"  trend_filter: {str(c['trend_filter']).lower()}")
         if args.interval:
             print(f"  # и interval: \"{interval}\" на верхнем уровне конфига")
+        print("Перед демо перепроверьте её одиночным бэктестом на другом "
+              "количестве дней (--days).")
     else:
-        print("\nНи одна из топ-комбинаций не прибыльна на проверочном "
-              "периоде. Это честный ответ: на этом таймфрейме/периоде "
-              "стратегию в торговлю не брать. Попробуйте --interval 15 "
+        print("\nНи одна комбинация не прибыльна одновременно на обучении "
+              "и проверке. Это честный ответ: в таком виде стратегию "
+              "в торговлю не брать. Попробуйте --interval 15 / 30 "
               "или --days 90.")
 
 

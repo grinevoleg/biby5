@@ -82,12 +82,14 @@ class MeanReversionStrategy:
         if last.close <= lower and r <= p.rsi_oversold:
             if p.trend_filter and (trend is None or mid <= trend):
                 return None
-            return self._build("Buy", last.close, mid, a, r)
+            entry = last.close - p.entry_offset_atr * a
+            return self._build("Buy", entry, mid, a, r)
 
         if last.close >= upper and r >= p.rsi_overbought:
             if p.trend_filter and (trend is None or mid >= trend):
                 return None
-            return self._build("Sell", last.close, mid, a, r)
+            entry = last.close + p.entry_offset_atr * a
+            return self._build("Sell", entry, mid, a, r)
 
         return None
 

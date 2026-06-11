@@ -88,6 +88,19 @@ def test_insufficient_data_returns_none():
     assert strat.evaluate(make_candles([100.0] * 10)) is None
 
 
+def test_entry_offset_moves_entry_deeper():
+    candles = make_candles(uptrend_with_dip())
+    at_close = MeanReversionStrategy(base_params(), FeeParams())
+    offset = MeanReversionStrategy(
+        base_params(entry_offset_atr=0.5), FeeParams())
+    s0 = at_close.evaluate(candles)
+    s1 = offset.evaluate(candles)
+    assert s0 and s1
+    assert s1.entry < s0.entry          # лонг: вход глубже провала
+    assert s1.take == s0.take           # тейк тот же (средняя полоса)
+    assert s1.take - s1.entry > s0.take - s0.entry  # потенциал больше
+
+
 def test_min_rr_filter():
     """Сделка с тейком ближе, чем min_rr * стоп, отбрасывается."""
     params_loose = base_params(min_rr=0.01)
